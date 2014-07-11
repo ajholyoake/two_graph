@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.js"></script>
+<style>
+
+  line.link {
+    fill: none;
+    stroke-width: 1.5px;
+    stroke-opacity: 0.6;
+  }
+
+  circle {
+    fill: #888;
+    stroke: #fff;
+    stroke-width: 1.5px;
+  }
+
+  text {
+    fill: #000;
+    font: 10px sans-serif;
+    pointer-events: none;
+  }
+
+</style>
+<body>
+  <script>
+    var n = 25;
+    var p = 0.21;
+    var w = 1440;
+    var h = 960;
+    var nGraphs = 2;
+    var linkDistance = 300;
+    var charge = -20;
+
+    var colors = d3.scale.category10();
+
+    var nodes = d3.range(n).map(function(i){return {index:i};})
+
+    var g = [];
+    for(var i = 0; i < nGraphs; i++){
+    g.push(generateRandomGraph(p));
+    }
+
+    var links = zipGraphs(g);
+
+    var svg = d3.select('body').append('svg')
+    .attr('width',w)
+    .attr('height',h);
+
+    var force = d3.layout.force()
+    .distance(linkDistance)
+    .charge(-1000)
+    .size([w,h]);
+
+    force.nodes(nodes)
+    .links(links)
+    .start();
+
+    var link = svg.selectAll('.link')
+    .data(links)
+    .enter().append('line')
+    .attr('class','link')
+    .attr('stroke',function(d){return colors(d.graph);});
+
+    var node = svg.selectAll('.node')
+    .data(nodes,function(d){return d.index;})
+    .enter().append('circle')
+    .attr('class','node')
+    .attr('r',5)
+    .call(force.drag);
+
+    force.on('tick',tick);
+
+    function update(){
+
+      force.stop();
+      //Just choose 1 node to remove
+
+      var new_links = links.filter(function(d){return d.others.length !== nGraphs})
+
+
+    }
+
+
+
+
+    //Functions here
+    function tick(){
+      link.attr('x1', function(d){return d.source.x + offset(d)[0];})
+      .attr('x2', function(d){return d.target.x + offset(d)[0];})
+      .attr('y1', function(d){return d.source.y + offset(d)[1];})
+      .attr('y2', function(d){return d.target.y + offset(d)[1];});
+      node.attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
+
+    }
+
+    function offset(d){
+      var dx = d.target.x - d.source.x;
+      var dy = d.target.y - d.source.y;
+
+      var horizontal_offset = d.others.indexOf(d.graph)-(d.others.length-1)/2
+
+      var r = 2*(horizontal_offset)/Math.sqrt(dx*dx + dy*dy);
+      return [dy*r, -dx*r];
+    }
+
+    function generateRandomGraph(p){
+      var links = {};
+      for(var i = 0; i < n; i++){
+        for(var j = 0; j < i; j++){
+          if(Math.random() < p) links[[i,j]] = true;
+        }
+      }
+      return links;
+    }
+
+    function removeNode(g,node,nodes){
+      for(var k = 0; k < g.length; k++){
+        for(var i = 0; i < n; i++){
+          if(g[k][[i,node]]) g[k][[i,node]] = false;
+          if(g[k][[node,i]]) g[k][[node,i]] = false;
+        }
+      }
+      nodes = nodes.filter(function(d){return d.index !== node;});
+
+    }
+
+    function zipGraphs(g){
+      var links = [];
+      var t = [];
+      for(var i = 0; i < n; i++){
+        for(var j = 0; j < n; j++){
+          for(var k = 0; k < g.length; k++){
+            if(g[k][[i,j]]) t.push(k);
+          }
+          for(var k = 0; k < t.length; k++)
+          {
+            links.push({source:i, target:j, graph:t[k], others:t.slice(0)});
+          }
+          t = [];
+        }
+      }
+      return links;
+    }
+
+  </script>
+</body>
+</html>
+
