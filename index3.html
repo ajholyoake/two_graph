@@ -1,0 +1,73 @@
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.js"></script>
+<style>
+
+  line.link {
+    fill: none;
+    stroke-width: 1.5px;
+    stroke-opacity: 0.6;
+  }
+
+  circle {
+    fill: #888;
+    stroke: #fff;
+    stroke-width: 1.5px;
+  }
+
+  text {
+    fill: #000;
+    font: 10px sans-serif;
+    pointer-events: none;
+    rendering:
+  }
+
+  .colorbox{
+    stroke:#fff;
+    stroke-width:1.5px;
+    shape-rendering:crispEdges;
+
+  }
+
+</style>
+<body>
+  <script>
+    var n = 44;
+    var range = d3.range(n).map(function(i){return i;});
+    var names = ['category10','category20','category20b','category20c'];
+
+    var data = names.map(function(d){return {map: d3.scale[d](), name:d, values:range};});
+
+    var svg = d3.select('body').append('svg')
+    .attr('width',1400)
+    .attr('height',700)
+    .style('padding','50px');
+
+
+    var groups = svg.selectAll('g.colorgroup').data(data)
+    .enter()
+    .append('g')
+    .attr('class','colorgroup')
+    .attr('transform',function(d,i){return 'translate(' + 20 + ',' + (i*100 + 20) + ')'});
+
+    groups.append('text').text(function(d){return d.name;});
+    var boxes = groups.append('g').attr('class','box');
+
+    boxes.selectAll('rect.colorbox').data(function(d){return d.values;})
+    .enter()
+    .append('rect')
+    .attr('class','colorbox')
+    .attr('x',function(d){return d*25;})
+    .attr('y',10)
+    .attr('width',25)
+    .attr('height',25)
+    .attr('fill',function(d){
+      return d3.select(this.parentNode).datum()['map'](d);
+    });
+
+
+
+
+  </script>
+</body>
+</html>
+
